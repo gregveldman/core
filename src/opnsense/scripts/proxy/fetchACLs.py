@@ -272,6 +272,20 @@ class DomainSorter(object):
                     prev_line = line
 
 
+class UrlAsDomainSorter(DomainSorter):
+    """ Similar to a DomainSorter, but extract the domain information from a
+        URL-like blacklist entry and add it to the ACL.
+    """
+
+    def write(self, data):
+        """ save content, send reverse sorted to buffers
+            :param data: line to write
+        """
+        line = data.strip().split('/')[0]
+        line_split = line.split(':')
+        super().write(line_split[0] if len(line_split) == 2 else line)
+
+
 def filename_in_ignorelist(bfilename, filename_ext):
     """ ignore certain files from processing.
         :param bfilename: basefilename to inspect
@@ -308,7 +322,7 @@ def main():
                             acl_filters.append(acl_filter)
 
                 # define target(s)
-                targets = {'domain': {'filename': target_filename, 'handle': None, 'class': DomainSorter}}
+                targets = {'domain': {'filename': '{}_domain.acl'.format(target_filename), 'handle': None, 'class': DomainSorter}, 'url': {'filename': '{}_url.acl'.format(target_filename), 'handle': None, 'class': UrlAsDomainSorter}}
 
                 # only generate files if enabled, otherwise dump empty files
                 if cnf.has_option(section, 'enabled') and cnf.get(section, 'enabled') == '1':
